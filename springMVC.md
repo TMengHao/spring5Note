@@ -314,7 +314,7 @@ ${msg}
 
 #### 3.配置依赖
 
-> maven中添加jackson依赖
+> maven中添加jackson依赖（或者fast-json也可以）
 
 ```xml
 <dependency>
@@ -364,4 +364,3 @@ ${msg}
 
 > 1. @RestController作用在类上，代替@Controller，使用该注解默认该类返回的都是json字符串，不会被视图解析器解析
 > 2. @ResponseBody作用在方法上，配合@Controller使用，被该注解注解的方法返回json字符串，不会被视图解析器解析
-
