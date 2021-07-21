@@ -86,6 +86,34 @@ public class MybaisUtils {
 </configuration>
 ```
 
+#### 1.5.1、外部链接配置方法
+
+> 在configuration标签内第一行写明properties标签
+
+```xml
+<properties resource="db.properties"/>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${db.driver}"/>
+                <property name="url" value="${db.url}"/>
+                <property name="username" value="${db.username}"/>
+                <property name="password" value="${db.password}"/>
+            </dataSource>
+        </environment>
+</environments>
+```
+
+#### 1.5.2、配置properties文件
+
+```properties
+db.driver=com.mysql.cj.jdbc.Driver
+db.url=jdbc:mysql://localhost:3306/mybatis?useSSL=true&useUnicode=true&characterEncoding=UTF-8&serverTimeZone=UTC
+db.username=root
+db.password=Tmh010625
+```
+
 ### 1.6、编写SQL映射xml文件
 
 ```xml
@@ -245,4 +273,108 @@ public void test3(){
 >    ```xml
 >    select * from mybatis.user where name like "%"#{value}"%";
 >    ```
+
+## 3、配置解析
+
+### 3.1、类型别名（typeAliases）
+
+> 类型别名是为java类型设置一个短的名字
+>
+> 用来减少完全限定名的冗余
+>
+> + 在mybatis配置xml文件中配置
+
+#### 3.1.1、别名（typeAlias）
+
+```xml
+<typeAliases>
+        <typeAlias type="org.learn.demon.pojo.User" alias="user"/>
+</typeAliases>
+```
+
+> 可以用user来代替org.learn.demon.pojo.User的书写
+
+#### 3.1.2、扫描包(package)
+
+```xml
+<typeAliases>
+        <package name="org.learn.demon.pojo"/>
+</typeAliases>
+```
+
+> - mybatis在包名下面搜索需要的java bean
+>
+> - 扫描实体类的包，默认别名为这个类的类名，首字母小写
+>
+> - 第二种添加别名则需要在实体类上配置注解
+>
+>   ```java
+>   @Alias(value = "hello")
+>   public class User {}
+>   ```
+
+## 4、解决属性名和字段名不一致的问题
+
+### 4.1、在查询语句中起别名，别名与属性名一致(as)
+
+### 4.2、xml文件中使用resultMap
+
+> java实体类属性为password，数据库中字段名为pwd
+
+```xml
+<resultMap id="userMap" type="org.learn.demon.pojo.User">
+        <result column="pwd" property="password"/>
+    </resultMap>
+    <select id="selectOneUser" resultMap="userMap" parameterType="int">
+        select * from mybatis.user where id = #{id};
+</select>
+```
+
+## 5、日志
+
+<img src="noteImages\mybatis日志.JPG" style="zoom:150%;" />
+
+> mybatis配置xml文件，使用settings标签选择生成日志功能，常见的日志有以下几种：
+>
+> + SLF4J            ***
+> + LOG4J          ***
+> + LOG4J2
+> + JDK_LOGGING
+> + COMMONS_LOGGING
+> + STDOUT_LOGGING           ***
+> + NO_LOGGING
+
+```xml
+<settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+</settings>
+```
+
+### 5.1、log4j
+
+> 创建log4j的properties文件，配置如下内容
+
+```properties
+#将等级为DEBUG的日志信息输出到console file这两个目的地，console file的定义在下面的代码
+1og4j.rootLogger=DEBUG,console,file
+#控制台输出的相关设置
+1og4j.appender.console=org.apache.1og4j.ConsoleAppender
+1og4j.appender.console.Target=System.out
+1og4j.appender.console.Threshold=DEBUG
+1og4j.appender.console.1ayout=org.apache.1og4j.PatternLayout
+1og4j.appender.console.layout.ConversionPattern=[%c]-%m%n
+#文件输出的相关设置
+1og4j.appender.file=org.apache.1og4j.RollingFlAppedr
+1og4j.appender.file.File=./1og/kuang.log
+1og4j.appender.file.MaxFileSize=10mb
+1og4j.appender.file.Threshold=DEBUG
+1og4j.appender.file.layout=org.apache.log4j.PatternLayout
+1og4j.appender.filelayout.ConversionPattern=[%p][%d{yy-M-dd}][%c]%m%n
+#日志输出级别
+1og4j.logger.org.mybatis=DEBUG
+1og4j.logger.java.sq1=DEBUG
+1og4j.logger.java.sq1.Statement=DEBUG
+1og4j.1ogger.java.sq1.ResultSet=DEBUG
+log4j.logger.java.sq1.Preparedstatement=DEBUG
+```
 
