@@ -378,3 +378,152 @@ public void test3(){
 log4j.logger.java.sq1.Preparedstatement=DEBUG
 ```
 
+## 6、使用注解开发（不建议）
+
+> 本质是反射，底层是动态代理
+
+### 6.1、注解在接口上实现
+
+```java
+@select("select * from user")
+List<User> getUser();
+```
+
+### 6.2、核心配置文件中绑定接口
+
+```xml
+<mapper>
+	<mapper class="org.learn.demon.dao.UserMapper"/>
+</mapper>
+```
+
+### 6.3、@Param()注解
+
+> 1. 基本类型的参数或者String类型，需要加上
+> 2. 引用类型不需要加
+> 3. 如果只有一个基本类型可以忽略，建议都写上
+> 4. 在SQL中引用的就是我们这里的@Param()中设定的属性名
+
+## 7、多表关联查询
+
+> 建议使用**联表查询**
+
++ 创建数据库
+
+<img src="noteImages\一对多数据库.jpg" alt="image-20210722134647526" style="zoom:150%;" />
+
+### 7.1、多对一
+
+> JAVA中表示为类中的属性含有对象
+
++ 创建实体类
+
+  ```java
+  @Data
+  public class Student {
+      private int id;
+      private String name;
+      private Teacher teacher;
+  }
+  ```
+
+  ```java
+  @Data
+  public class Teacher {
+      private int id;
+      private String name;
+  }
+  ```
+
+#### 7.1.1、子查询
+
+```xml
+<select id="getAllStudentInfo" resultMap="studentMap">
+        select * from mybatis.student;
+    </select>
+    <resultMap id="studentMap" type="Student">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <association property="teacher" column="tid" javaType="Teacher" select="getAllTeacher"/>
+    </resultMap>
+    <select id="getAllTeacher" resultType="Teacher">
+        select * from mybatis.teacher;
+</select>
+```
+
+#### 7.1.2、联表查询
+
+```xml
+<select id="getAllStudentInfo2" resultMap="stuTeaMap">
+        select s.id as sid,s.name as sname,t.name as tname,t.id as tid from mybatis.student as s,mybatis.teacher as t where s.tid = t.id;
+    </select>
+    <resultMap id="stuTeaMap" type="Student">
+        <result property="id" column="sid"/>
+        <result property="name" column="sname"/>
+        <association property="teacher" column="Teacher">
+            <result property="name" column="tname"/>
+            <result property="id" column="tid"/>
+        </association>
+</resultMap>
+```
+
+### 7.2、一对多
+
+> JAVA中表示为类中的属性含有集合对象
+
++ 创建实体类
+
+  ```java
+  @Data
+  public class Student{
+      private Integer id;
+      private String name;
+      private Integer tid;
+  }
+  ```
+
+  ```java
+  @Data
+  public class Teacher{
+      private Integer id;
+      private String name;
+      private List<Student> students;
+  }
+  ```
+
+#### 7.2.1、联表查询
+
+```xml
+<select id="selectTeacherById" resultMap="getStudentMap" parameterType="int">
+        select t.id as tid,t.name as tname,s.name as sname,s.id as sid,s.tid as stid from mybatis.teacher as t,mybatis.student as s
+        where t.id = s.tid and t.id = #{tid};
+    </select>
+    <resultMap id="getStudentMap" type="Teacher">
+        <result column="tname" property="name"/>
+        <result column="tid" property="id"/>
+        <collection property="students" ofType="Student">
+            <result property="name" column="sname"/>
+            <result property="id" column="sid"/>
+            <result property="tid" column="tid"/>
+        </collection>
+</resultMap>
+```
+
+## 8、动态SQL
+
+### 8.1、where/if
+
+```xml
+<select id="selectBlogJudge" resultType="myBlog" parameterType="map">
+        select * from mybatis.myblog
+        <where>
+            <if test="title != null">
+                title = #{title}
+            </if>
+            <if test="author != null">
+                and author = #{author}
+            </if>
+        </where>
+</select>
+```
+
