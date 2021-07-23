@@ -513,6 +513,8 @@ List<User> getUser();
 
 ### 8.1、where/if
 
+> 自动去除and添加and
+
 ```xml
 <select id="selectBlogJudge" resultType="myBlog" parameterType="map">
         select * from mybatis.myblog
@@ -526,4 +528,74 @@ List<User> getUser();
         </where>
 </select>
 ```
+
+### 8.2、set
+
+> 自动去除逗号
+
+```xml
+<set>
+    <if test="author != null">
+        author = #{author},
+    </if>
+</set>
+<where>
+    id = #{id}
+</where>
+```
+
+### 8.4、foreach
+
+> collection表示传入为集合元素
+>
+> item表示传入的具体元素
+>
+> open表示开头用什么
+>
+> close表示结尾用什么
+>
+> separator表示中间判断条件的连接符
+
+```xml
+<select id="selectBlogById" resultType="myBlog" parameterType="map">
+    select * from mybatis.myblog
+    <where>
+        <foreach collection="names" item="author" open="and (" close=")" separator="or">
+            author = #{author}
+        </foreach>
+    </where>
+</select>
+```
+
+### 8.5、SQL
+
+> 标签内的id可以被别的SQL语句用include语句引用，提高代码可重用性
+
+```xml
+<sql id="if-text-title">
+    <if test="title != null">
+        title = #{title}
+    </if>
+    <if test="author != null">
+        and author = #{author}
+    </if>
+</sql>
+<select id="selectBlogJudge" resultType="myBlog" parameterType="map">
+    select * from mybatis.myblog
+    <where>
+        <include refid="if-text-title"></include>
+    </where>
+</select>
+```
+
+## 9、二级缓存
+
++ 基于namespace级别缓存，一个名称空间对应一个二级缓存，也叫全局缓存
++ 工作机制
+  + 一个会话查询一条数据，这个数据就会被放在当前会话的一级缓存中
+  + 如果当前会话关闭，对应的一级缓存清除
+  + 新的会话查询信息，可以从二级缓存中获取内容
+  + 不同的mapper查出的数据会放在自己对应的缓存（map）中
+
+![image-20210723131637445](noteImages\缓存.jpg)
 
